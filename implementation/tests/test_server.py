@@ -63,7 +63,7 @@ async def test_search_filters_ordering_and_pagination(client: Client):
     )
     assert result.data["count"] == 1
     assert result.data["has_more"] is True
-    assert result.data["rows"][0]["name"] == "Ada Lovelace"
+    assert result.data["rows"][0]["name"] == "John Smith"
 
 
 async def test_insert_returns_inserted_payload(client: Client):

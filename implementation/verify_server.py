@@ -7,6 +7,7 @@ without starting a subprocess or opening a network port.
 from __future__ import annotations
 
 import asyncio
+import os
 import json
 from typing import Any
 
@@ -31,7 +32,7 @@ def _extract_resource_text(result: Any) -> str:
 
 
 async def main() -> None:
-    create_database("sqlite")
+    create_database(os.getenv("DB_BACKEND", "sqlite"))
 
     async with Client(mcp) as client:
         tools = await client.list_tools()
