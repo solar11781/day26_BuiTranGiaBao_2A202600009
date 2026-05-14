@@ -1,181 +1,507 @@
 # Lab: Build a Database MCP Server with FastMCP and SQLite
 
-## Goal
+**Tên** Bùi Trần Gia Bảo  
+**Mã HV:** 2A202600009
 
-Build a Model Context Protocol (MCP) server using FastMCP that exposes a small database through:
+This project implements a FastMCP server backed by a relational database.  
+The server exposes exactly three MCP tools:
 
 - `search`
 - `insert`
 - `aggregate`
 
-You must also expose the database schema as an MCP resource, test the server with Inspector or equivalent tooling, and show the server working from at least one MCP client.
-
-## Learning Outcomes
-
-By the end of this lab, students should be able to:
-
-- explain what MCP tools and resources are
-- build a FastMCP server in Python
-- connect FastMCP to a SQLite database
-- safely validate database requests before executing SQL
-- expose dynamic schema context through `@mcp.resource(...)`
-- test tool schemas, normal calls, and error responses
-- connect the server to an MCP client such as Claude Code, Codex, or Gemini CLI
-
-## Required Features
-
-### Part 1: MCP Server
-
-Implement a FastMCP server that exposes exactly these tool categories:
-
-1. `search`
-2. `insert`
-3. `aggregate`
-
-Your server may use SQLite for the main implementation. If you want to support PostgreSQL too, design the code so the database layer can be swapped later.
-
-### Part 2: Resource
-
-Expose database schema information as MCP resources:
-
-- one resource for the full database schema
-- one dynamic resource template for a single table schema
-
-Suggested URIs:
+It also exposes these MCP resources:
 
 - `schema://database`
 - `schema://table/{table_name}`
 
-### Part 3: Validation and Error Handling
+The default backend is SQLite, but the same MCP surface also supports PostgreSQL through a shared adapter interface.
 
-Your tools must reject unsafe or invalid requests:
+---
 
-- unknown table names
-- unknown column names
-- unsupported filter operators
+# Features
+
+## MCP Tools
+
+### `search`
+
+Search validated database tables with:
+
+- filters
+- ordering
+- pagination
+- selected columns
+
+Supported operators:
+
+```text
+eq, ne, gt, gte, lt, lte, like, in, is_null, not_null
+```
+
+---
+
+### `insert`
+
+Insert validated rows safely using parameterized SQL.
+
+---
+
+### `aggregate`
+
+Supports:
+
+- `count`
+- `avg`
+- `sum`
+- `min`
+- `max`
+
+Optional grouping is supported.
+
+---
+
+# MCP Resources
+
+## Full database schema
+
+```text
+schema://database
+```
+
+## Per-table schema template
+
+```text
+schema://table/{table_name}
+```
+
+---
+
+# Safety Features
+
+The server rejects:
+
+- unknown tables
+- unknown columns
+- unsupported operators
 - invalid aggregate requests
 - empty inserts
 
-Do not build SQL by blindly concatenating raw user input.
+Additional protections:
 
-### Part 4: Testing and Verification
+- parameterized SQL values
+- validated identifiers
+- pagination limits
+- structured validation errors
 
-Verify all of the following:
+---
 
-1. the server starts correctly
-2. the three tools are discoverable
-3. the schema resource is discoverable
-4. valid tool calls return useful results
-5. invalid tool calls return clear errors
-6. at least one MCP client can connect and use the server
+# Bonus Features
 
-### Part 5: Demo Deliverables
+## PostgreSQL Support
 
-Prepare:
+The same MCP interface supports:
 
-- GitHub repository
-- setup instructions
-- tool descriptions
-- testing steps
-- at least one client configuration example
-- short demo video, around 2 minutes
+- SQLite
+- PostgreSQL
 
-Inspector screenshots are recommended if you use MCP Inspector.
+through a shared adapter abstraction.
 
-## Suggested Project Structure
+---
 
-```text
-implementation/
-  db.py
-  init_db.py
-  mcp_server.py
-  verify_server.py
-  tests/
-    test_server.py
-```
+## HTTP Authentication
 
-## Recommended Data Model
+The HTTP transport supports bearer-token authentication using FastMCP `StaticTokenVerifier`.
 
-Use a small relational dataset so `search`, `insert`, and `aggregate` are easy to demo. Example:
+---
 
-- `students`
-- `courses`
-- `enrollments`
+## Pagination Metadata
 
-## Example Tasks to Demonstrate
+Search responses include:
 
-- search all students in cohort `A1`
-- insert a new student
-- count rows in a table
-- compute average score by cohort
-- read the full schema resource
-- read `schema://table/students`
-- show an invalid request, such as searching a missing table
+- `has_more`
+- `next_offset`
 
-## FastMCP and Inspector References
+---
 
-- FastMCP quickstart: https://gofastmcp.com/v2/getting-started/quickstart
-- FastMCP resources: https://gofastmcp.com/v2/servers/resources
-- MCP Inspector: https://modelcontextprotocol.io/docs/tools/inspector
+## Automated Verification
 
-## Client Setup Notes
+Included:
 
-### Claude Code
+- repeatable verification script
+- automated tests
+- Inspector workflow
 
-Anthropic documents local JSON config and `claude mcp add` flows here:
+---
 
-- https://code.claude.com/docs/en/mcp
+---
 
-Claude Code supports MCP resources via `@server:resource-uri` references and supports environment variable expansion in `.mcp.json`.
+# Requirements
 
-### Codex
+Install:
 
-OpenAI documents Codex MCP setup here:
+- Python 3.11+
+- Node.js/npm
+- Git Bash or terminal
+- PostgreSQL
 
-- https://developers.openai.com/learn/docs-mcp
+---
 
-Codex supports MCP server configuration through the CLI and `~/.codex/config.toml`.
+# Setup
 
-### Gemini CLI
+## 1. Create virtual environment
 
-Gemini CLI has a built-in MCP manager. In the verified local workflow, the simplest path is:
+From the repo root:
+
+### Git Bash / macOS / Linux
 
 ```bash
-gemini mcp add sqlite-lab /ABSOLUTE/PATH/TO/python /ABSOLUTE/PATH/TO/implementation/mcp_server.py --description "SQLite lab FastMCP server" --timeout 10000
-gemini mcp list
+python -m venv venv
+source venv/Scripts/activate
 ```
 
-Gemini CLI also documents configuration details here:
+### Windows PowerShell
 
-- https://github.com/google-gemini/gemini-cli/blob/main/docs/reference/configuration.md
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+```
 
-Expected outcome:
+---
 
-- the server appears as `Connected`
-- Gemini can discover `search`, `insert`, and `aggregate`
-- a headless smoke test works with `gemini --allowed-mcp-server-names sqlite-lab --yolo -p "..."`
+## 2. Install dependencies
 
-### Antigravity
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
 
-Antigravity commonly uses an `mcp_config.json` file with a shape similar to Gemini CLI. Verify the current product behavior in your installed version before grading against exact UI steps.
+---
 
-## Deliverable Checklist
+# SQLite Setup
 
-- working FastMCP server
-- SQLite database and seed data
-- `search`, `insert`, `aggregate` tools
-- schema resource and schema resource template
-- verification steps
-- automated tests or repeatable verification script
-- client configuration example
-- README with setup and demo steps
-- Inspector startup command or helper script
-- at least one verified Gemini CLI or Claude/Codex client test
+Initialize SQLite database:
 
-## Bonus
+```bash
+python implementation/init_db.py --backend sqlite
+```
 
-Optional bonus:
+Expected output:
 
-- add authentication for SSE or HTTP transport
-- support both SQLite and PostgreSQL with the same MCP surface
-- add richer output annotations or pagination
+```text
+SQLite database initialized at: .../implementation/lab26.sqlite3
+```
+
+---
+
+# PostgreSQL Setup (Bonus)
+
+## 1. Install PostgreSQL
+
+Install:
+
+https://www.postgresql.org/download/
+
+During installation:
+
+- keep port `5432`
+- remember your password for user `postgres`
+
+---
+
+## 2. Create database
+
+Open PostgreSQL terminal:
+
+```bash
+psql -U postgres
+```
+
+Create database:
+
+```sql
+CREATE DATABASE lab26;
+```
+
+---
+
+## 3. Create `.env`
+
+Create `.env` in the repo root:
+
+```env
+DB_BACKEND=postgres
+DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/lab26
+LAB26_AUTH_TOKEN=dev-lab26-token
+```
+
+Replace:
+
+- `YOUR_PASSWORD`
+
+with your actual PostgreSQL password.
+
+---
+
+## 4. Initialize PostgreSQL database
+
+```bash
+python implementation/init_db.py --backend postgres
+```
+
+Expected output:
+
+```text
+PostgreSQL database initialized from DATABASE_URL: ...
+```
+
+---
+
+# Verification
+
+Run the repeatable verification script:
+
+```bash
+python implementation/verify_server.py
+```
+
+Expected output includes:
+
+```text
+Tools discovered: ['aggregate', 'insert', 'search']
+Resources discovered: ['schema://database']
+Resource templates discovered: ['schema://table/{table_name}']
+All Lab 26 MCP checks passed.
+```
+
+---
+
+# Automated Tests
+
+Run:
+
+```bash
+python -m pytest
+```
+
+---
+
+# Run MCP Server
+
+From repo root:
+
+```bash
+python implementation/mcp_server.py
+```
+
+Expected output:
+
+```text
+Starting MCP server 'SQLite Lab MCP Server' with transport 'stdio'
+```
+
+---
+
+# MCP Inspector
+
+## 1. Install Node.js
+
+Download:
+
+https://nodejs.org/
+
+Verify:
+
+```bash
+node -v
+npm -v
+```
+
+---
+
+## 2. Run Inspector
+
+From repo root:
+
+```bash
+cd implementation
+./start_inspector.sh
+```
+
+Open the printed URL.
+
+---
+
+# Example Inspector Calls
+
+## Search A1 students
+
+```json
+{
+  "table": "students",
+  "filters": {
+    "cohort": "A1"
+  },
+  "columns": ["id", "name", "cohort", "score"],
+  "order_by": "score",
+  "descending": true,
+  "limit": 5
+}
+```
+
+---
+
+## Insert student
+
+```json
+{
+  "table": "students",
+  "values": {
+    "name": "Dorothy Vaughan",
+    "email": "dorothy@example.edu",
+    "cohort": "A1",
+    "score": 89.0
+  }
+}
+```
+
+---
+
+## Aggregate average score
+
+```json
+{
+  "table": "students",
+  "metric": "avg",
+  "column": "score",
+  "group_by": "cohort"
+}
+```
+
+---
+
+## Invalid validation example
+
+```json
+{
+  "table": "missing_table"
+}
+```
+
+---
+
+# Gemini CLI MCP Client Setup
+
+## 1. Install Gemini CLI
+
+```bash
+npm install -g @google/gemini-cli
+```
+
+Verify:
+
+```bash
+gemini --version
+```
+
+---
+
+## 2. Login
+
+```bash
+gemini auth login
+```
+
+If unavailable:
+
+```bash
+gemini login
+```
+
+Complete browser authentication.
+
+---
+
+## 3. Add MCP server
+
+From repo root:
+
+```bash
+gemini mcp add sqlite-lab "E:/ABSOLUTE/PATH/TO/venv/Scripts/python.exe" "E:/ABSOLUTE/PATH/TO/implementation/mcp_server.py" --description "SQLite lab FastMCP server" --timeout 10000
+```
+
+Example:
+
+```bash
+gemini mcp add sqlite-lab "E:/Desktop/Day26-Track3-MCP-tool-integration/venv/Scripts/python.exe" "E:/Desktop/Day26-Track3-MCP-tool-integration/implementation/mcp_server.py" --description "SQLite lab FastMCP server" --timeout 10000
+```
+
+---
+
+## 4. Open Gemini CLI
+
+```bash
+gemini
+```
+
+If prompted about IDE integration:
+
+```text
+Select: No
+```
+
+---
+
+## 5. Test MCP server
+
+Inside Gemini CLI:
+
+```text
+Use the sqlite-lab MCP server. Read schema://database and show the top 2 students by score.
+```
+
+Successful output confirms:
+
+- MCP client integration
+- tool discovery
+- resource access
+- live MCP functionality
+
+---
+
+# HTTP Transport with Authentication (Bonus)
+
+## Run HTTP server
+
+### Git Bash / macOS / Linux
+
+```bash
+python implementation/mcp_server.py --transport http --host 127.0.0.1 --port 8000
+```
+
+### Windows PowerShell
+
+```powershell
+python implementation/mcp_server.py --transport http --host 127.0.0.1 --port 8000
+```
+
+---
+
+## Health check
+
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+---
+
+## MCP endpoint
+
+```text
+http://127.0.0.1:8000/mcp
+```
+
+Clients must send:
+
+```text
+Authorization: Bearer dev-lab26-token
+```

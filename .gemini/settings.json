@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "sqlite-lab": {
+      "command": "E:/Desktop/Day26-Track3-MCP-tool-integration/venv/Scripts/python.exe",
+      "args": [
+        "E:/Desktop/Day26-Track3-MCP-tool-integration/implementation/mcp_server.py"
+      ],
+      "timeout": 10000,
+      "description": "SQLite lab FastMCP server"
+    }
+  }
+}
