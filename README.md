@@ -270,6 +270,26 @@ Expected output includes:
 Tools discovered: ['aggregate', 'insert', 'search']
 Resources discovered: ['schema://database']
 Resource templates discovered: ['schema://table/{table_name}']
+```
+
+The script intentionally performs an invalid request using:
+
+```text
+table = "missing_table"
+```
+
+to verify safe validation and error handling.
+
+Expected validation output:
+
+```text
+Expected invalid request error:
+Error calling tool 'search': Validation error: Unknown table 'missing_table'
+```
+
+Successful completion ends with:
+
+```text
 All Lab 26 MCP checks passed.
 ```
 
@@ -335,57 +355,140 @@ Open the printed URL.
 
 ## Search A1 students
 
+Tool: `search`
+
+Fill the fields like this:
+
+### table
+
+```text
+students
+```
+
+### filters
+
 ```json
 {
-  "table": "students",
-  "filters": {
-    "cohort": "A1"
-  },
-  "columns": ["id", "name", "cohort", "score"],
-  "order_by": "score",
-  "descending": true,
-  "limit": 5
+  "cohort": "A1"
 }
 ```
+
+### columns
+
+```json
+["id", "name", "cohort", "score"]
+```
+
+### order_by
+
+```text
+score
+```
+
+### descending
+
+```text
+true
+```
+
+### limit
+
+```text
+5
+```
+
+Then click **Run Tool**.
 
 ---
 
 ## Insert student
 
+Tool: `insert`
+
+Fill the fields like this:
+
+### table
+
+```text
+students
+```
+
+### values
+
 ```json
 {
-  "table": "students",
-  "values": {
-    "name": "Dorothy Vaughan",
-    "email": "dorothy@example.edu",
-    "cohort": "A1",
-    "score": 89.0
-  }
+  "name": "Dorothy Vaughan",
+  "email": "dorothy@example.edu",
+  "cohort": "A1",
+  "score": 89.0
 }
 ```
+
+Then click **Run Tool**.
 
 ---
 
 ## Aggregate average score
 
-```json
-{
-  "table": "students",
-  "metric": "avg",
-  "column": "score",
-  "group_by": "cohort"
-}
+Tool: `aggregate`
+
+Fill the fields like this:
+
+### table
+
+```text
+students
 ```
+
+### metric
+
+```text
+avg
+```
+
+### column
+
+Uncheck `null`, then enter:
+
+```text
+score
+```
+
+### group_by
+
+```text
+cohort
+```
+
+### filters
+
+Leave blank or use:
+
+```json
+{}
+```
+
+Then click **Run Tool**.
 
 ---
 
 ## Invalid validation example
 
-```json
-{
-  "table": "missing_table"
-}
+Tool: `search`
+
+Fill the fields like this:
+
+### table
+
+```text
+missing_table
 ```
+
+Leave the other fields empty.
+
+Then click **Run Tool**.
+
+This should fail with a validation error. That failure is expected and demonstrates safe error handling.
 
 ---
 
