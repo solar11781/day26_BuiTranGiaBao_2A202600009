@@ -3,6 +3,8 @@
 **Tên** Bùi Trần Gia Bảo  
 **Mã HV:** 2A202600009
 
+**Demo Video:** https://youtu.be/LRY91PaujoU
+
 This project implements a FastMCP server backed by a relational database.  
 The server exposes exactly three MCP tools:
 
